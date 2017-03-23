@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>Portfolio Optimization</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+  </head>
+
+  <body>
+      <div class="boxed" align=center>
+          <H1>Portfolio Optimization</H1>
+          <form>
+             Investment Amount:<br>
+             <input type="text" name="investment"><br>
+             Expected Return:<br>
+             <input type="text" name="expectedreturn"><br> 
+             <input type="submit" name="submit" value="Optimize" formmethod="post">
+          </form> 
+      </div>
+      <br>
+
+      {% if result['error'] is defined %}
+       Error Message: {{ result['error']  }}
+      {% endif %}
+
+      {% if result['allocation'] is defined %}
+         <div align=center>
+	     <table>
+	     <tr>	
+	        <td> <H2>List of stocks considered and allocation:</H2> </td> 
+	     </tr>
+	     {% for i in range(result['symbol']|length)  %}
+	     <tr>
+	        <td align=left> {{ result['symbol'][i] }} : {{ result['company'][i] }} -- ${{ result['allocation'][i] }}  </td>
+	     </tr>        
+	     {% endfor %}
+	     </table>
+         </div>
+      {% endif %}
+  
+  </body>
+</html>

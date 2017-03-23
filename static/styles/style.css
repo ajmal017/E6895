@@ -1,0 +1,17 @@
+.boxed {
+  border: 2px solid blue ;
+}
+
+div {
+    width: 50%;
+    text-align: center;
+    background-color: lightblue;
+}
+
+html {
+   text-align: center;
+}
+
+body {
+    font-family: sans-serif;	
+}
