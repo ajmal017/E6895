@@ -42,27 +42,26 @@ def populate_data(symbols_company):
 
 	c = conn.cursor()
 
-	c.execute('''DROP TABLE IF EXISTS categories''')
-	c.execute('''CREATE TABLE categories (category_id int, cat_name text)''')
+	with open('db_schema.sql','r') as f:
+		sql = f.read()
+		c.executescript(sql)
 
 	categories = [(1, 'Technology'), (2,'Energy'), (3, 'Healthcare'), (4, 'Retailer')]
-	c.executemany('INSERT INTO categories VALUES (?,?)', categories)
+	c.executemany('INSERT INTO stock_categories VALUES (?,?)', categories)
 
-	c.execute('''DROP TABLE IF EXISTS stocks''')
-	c.execute('''CREATE TABLE stocks (category int, symbol text, company text) ''')
-
-	#symbols = ['DLTR', 'EEFT', 'FARM', 'FOXA', 'FOXF', 'IRDM', 'NVEC', 'OTEX']	
-	stocks = map(lambda x:(1,x[0],x[1]), symbols_company)
+	stocks = []
+	for i in range(len(symbols_company)):
+		stocks.append((i, symbols_company[i][0], symbols_company[i][1],'',1))
 
 	#stocks = [(1,'IBM'),(1,'GOOG'),(1,'MSFT'),(1,'T'),(1,'AAPL'),(1,'AMZN'),(1,'YHOO'),(1,'TSLA'),(1,'INTC'), (4,'WMT')]
-	c.executemany('INSERT INTO stocks VALUES (?,?,?)', stocks)
+	c.executemany('INSERT INTO system_stocks VALUES (?,?,?,?,?)', stocks)
 
-
-	for r in c.execute('SELECT * FROM categories'):
+	for r in c.execute('SELECT * FROM stock_categories'):
 		print r
 
-	for r in c.execute('SELECT * FROM stocks'):
-		print r
+	for r in c.execute('SELECT * FROM system_stocks'):
+		print r	
+	
 
 	conn.commit()
 

@@ -32,7 +32,7 @@ def get_price_history(stocksymbol, startyear, endyear):
 					price_data[header[i]].insert(0, values[i]) #the data is in descending order of days, insert at the beginning
 
 	else:	
-		"""
+		#"""
 		url = 'http://ichart.yahoo.com/table.csv?s='
 		url2 = "%s%s&a=%d&b=%d&c=%d&d=%d&e=%d&f=%d&g=m" %(url, stocksymbol, 0, 1, int(startyear), 11, 31, int(endyear)) # 0/1 => Jan 1, 11/31 => Dec 31
 		response = ""
@@ -48,10 +48,10 @@ def get_price_history(stocksymbol, startyear, endyear):
 					sys.exit(1)
 				time.sleep(1)
 			
-		reader = csv.DictReader(response)
-		"""
-		stock = Share(symbol)
-		histdata = stock.get_historical(startyear+'-01-01',endyear+'-12-31') #Jan 1 of startyear through Dec 31 of endyear		
+		histdata = csv.DictReader(response)
+		#"""
+		#stock = Share(stocksymbol)
+		#histdata = stock.get_historical(str(startyear)+'-01-01',str(endyear)+'-12-31') #Jan 1 of startyear through Dec 31 of endyear		
 
 		firstline = True
 		with open("cache/"+stocksymbol+"_"+str(startyear)+"_"+str(endyear),"w") as fw:

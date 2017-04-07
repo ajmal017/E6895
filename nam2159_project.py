@@ -25,7 +25,7 @@ def porfolio():
 			conn = sqlite3.connect('data/portfolio.db')
 			c = conn.cursor() 
 
-			for r in c.execute('''select cat_name, symbol, company from categories A, stocks B where A.category_id = B.category'''):
+			for r in c.execute('''select cat_name, symbol, company_name from stock_categories A, system_stocks B where A.cat_id = B.cat_id'''):
 				print r[1]
 				#res['symbol'].append(r[1]+" : "+r[2])	
 				res['symbol'].append(r[1])
