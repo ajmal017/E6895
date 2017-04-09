@@ -4,6 +4,7 @@ import urllib2
 import csv
 import os
 import numpy as np
+import sqlite3
 from collections import defaultdict
 from yahoo_finance import Share
 from cvxopt import matrix, solvers
@@ -13,6 +14,7 @@ cached = True
 
 def get_price_history(stocksymbol, startyear, endyear):
 	price_data = defaultdict(list)
+
 
 	if cached and os.path.exists("cache/"+stocksymbol+"_"+str(startyear)+"_"+str(endyear)):
 		with open("cache/"+stocksymbol+"_"+str(startyear)+"_"+str(endyear),"r") as fr:
@@ -67,17 +69,59 @@ def get_price_history(stocksymbol, startyear, endyear):
 					fw.write(header[:-1]+"\n")
 					firstline = False
 				fw.write(values[:-1]+"\n")
-	
 	return price_data
 
 def returns(stocksymbol, startyear, endyear):
-	price_dict = get_price_history(stocksymbol, startyear, endyear)
-	prices = [float(x) for x in price_dict["Close"]]
-	prices.insert(0,float(price_dict["Open"][0]))
- 	prices = [ prices[i] for i in range(0,len(prices),12)]
-	#Average return
- 	ret = [(prices[i+1] - prices[i]) for i in range(len(prices)-1)]
-	print prices
+	conn = sqlite3.connect('data/portfolio.db')
+	c = conn.cursor()
+        t = (startyear, endyear, stocksymbol)
+	c.execute('select B.year, B.yearly_return from system_stocks A, stock_returns B where A.stock_id = B.stock_id and B.year >=? and B.year<=? and A.symbol=?', t) 
+	rows = c.fetchall()
+	ret = [] 
+	print "NUMBER OF ROWS ",len(rows)	
+	if len(rows) > 1:
+		ret = map(lambda x:x[1], rows)
+		print "Reading from database"
+	else:
+		price_dict = get_price_history(stocksymbol, startyear, endyear)
+		
+		t = (stocksymbol,)
+		c.execute('select stock_id from system_stocks where symbol=?',t)
+		stock_id = c.fetchone()[0]
+		print stock_id, stocksymbol	
+		
+		prices = []
+		years = []
+		if len(price_dict["Open"]) > 0:
+			prices.insert(0,float(price_dict["Open"][0]))
+		for i in  range(0, len(price_dict["Date"])-1 ):
+			yr = 	price_dict["Date"][i].split('-')[0]
+			yrnext = price_dict["Date"][i+1].split('-')[0]
+			if yr != yrnext:
+				prices.append(float(price_dict["Close"][i]))
+				years.append(int(yr))
+			if i == len(price_dict["Date"]) - 2: #last entry
+				prices.append(float(price_dict["Close"][i]))
+				years.append(int(yrnext))
+							
+		
+		#prices = [float(x) for x in price_dict["Close"]]
+		#prices.insert(0,float(price_dict["Open"][0]))
+		#prices = [ prices[i] for i in range(0,len(prices),12)]
+		#years = map(lambda x:int(x.split('-')[0]), price_dict["Date"]) 
+		#years = [ years[y] for y in range(0, len(years),12)]
+		print years
+		ret = [(prices[i+1] - prices[i]) for i in range(len(prices)-1)]
+		print ret
+		for y in range(len(years)):
+			t = (stock_id, years[y], ret[y])	
+			c.execute('insert into stock_returns values(?,?,?)',t)
+		conn.commit()	
+		print prices
+	if len(ret) < (endyear - startyear + 1):
+		for i in range(endyear -startyear + 1 - len(ret) ):
+			ret.insert(0, 0.0)
+	print ret
 	return ret
 
 def markwtz_opt(avg_ret,dim,cov_mat,exp_ret):
@@ -105,7 +149,8 @@ def optimize_portfolio(stock_symbols, investment, exp_ret, startyear, endyear):
 		ret = returns(stock, startyear, endyear) 
 		avg_ret.append(np.mean(ret))	
 		price_mat.append(np.array(ret))	
-        #print "avg_ret=",avg_ret
+        print "avg_ret=",avg_ret, "len=", len(avg_ret)
+        #print "price_mat=",price_mat, "len=", len(price_mat)
 	price_mat = np.array(price_mat)
 	cov_mat = matrix(np.array(np.cov(price_mat)))
 	avg_ret = np.transpose(matrix(avg_ret, (1,len(avg_ret)))) # make it a column vector

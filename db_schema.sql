@@ -30,7 +30,6 @@ CREATE TABLE system_stocks(
   stock_id INTEGER PRIMARY KEY,
   symbol TEXT,
   company_name TEXT,
-  start_year TEXT,
   cat_id INTEGER,
   FOREIGN KEY(cat_id) REFERENCES stock_category(cat_id)
 );
@@ -39,8 +38,8 @@ DROP TABLE IF EXISTS stock_returns;
 
 CREATE TABLE stock_returns(
   stock_id INTEGER,
-  year TEXT,
-  avg_return REAL,
+  year INTEGER, 
+  yearly_return REAL,
   FOREIGN KEY(stock_id) REFERENCES system_stocks(stock_id)
 );
 

@@ -51,10 +51,10 @@ def populate_data(symbols_company):
 
 	stocks = []
 	for i in range(len(symbols_company)):
-		stocks.append((i, symbols_company[i][0], symbols_company[i][1],'',1))
+		stocks.append((i, symbols_company[i][0], symbols_company[i][1],1))
 
 	#stocks = [(1,'IBM'),(1,'GOOG'),(1,'MSFT'),(1,'T'),(1,'AAPL'),(1,'AMZN'),(1,'YHOO'),(1,'TSLA'),(1,'INTC'), (4,'WMT')]
-	c.executemany('INSERT INTO system_stocks VALUES (?,?,?,?,?)', stocks)
+	c.executemany('INSERT INTO system_stocks VALUES (?,?,?,?)', stocks)
 
 	for r in c.execute('SELECT * FROM stock_categories'):
 		print r
@@ -69,6 +69,6 @@ def populate_data(symbols_company):
 
 
 if __name__ == "__main__":
-	stock_peg = get_low_peg_stocks(20)
+	stock_peg = get_low_peg_stocks(300)
 	print stock_peg
 	populate_data(stock_peg)
