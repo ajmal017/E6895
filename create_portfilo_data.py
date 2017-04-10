@@ -1,6 +1,6 @@
 import sqlite3
 
-excludelist = ['TRHC','TRVG','XPER','XCRA','WSFS','WPPGY','VRTS','VIVO','URBN','ZBRA','UHAL','UEIC','TZOO', 'TA']
+excludelist = ['TRHC','TRVG','XPER','XCRA','WSFS','WPPGY','VRTS','VIVO','URBN','ZBRA','UHAL','UEIC','TZOO', 'TA', 'BIVV']
 
 def get_low_pe_stocks(n):
 	with open('data/PE_ratio.txt','r') as pe:
@@ -28,7 +28,7 @@ def get_low_peg_stocks(n): # PE Growth ratio > 1
 			if line.strip() == "":
 				continue
 			x = line.split(':')
-			if x[2] != None and x[0] not in excludelist and float(x[2]) > 2: #PE growth ration > 1
+			if x[2] != None and x[0] not in excludelist and float(x[2]) > 0.5: #PE growth ration > 0.5
 				pe_growth_data[x[0]] = float(x[2])
 				company[x[0]] = x[1]
 				#if x[0] in ["IBM", "GOOG", "FB", "AAPL"]:
@@ -69,6 +69,6 @@ def populate_data(symbols_company):
 
 
 if __name__ == "__main__":
-	stock_peg = get_low_peg_stocks(300)
+	stock_peg = get_low_peg_stocks(1000)
 	print stock_peg
 	populate_data(stock_peg)

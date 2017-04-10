@@ -8,9 +8,10 @@ import sqlite3
 from collections import defaultdict
 from yahoo_finance import Share
 from cvxopt import matrix, solvers
+from multiprocessing.pool import ThreadPool
 
 cached = True
-
+OPT_BUCKET_SIZE = 300
 
 def get_price_history(stocksymbol, startyear, endyear):
 	price_data = defaultdict(list)
@@ -78,17 +79,17 @@ def returns(stocksymbol, startyear, endyear):
 	c.execute('select B.year, B.yearly_return from system_stocks A, stock_returns B where A.stock_id = B.stock_id and B.year >=? and B.year<=? and A.symbol=?', t) 
 	rows = c.fetchall()
 	ret = [] 
-	print "NUMBER OF ROWS ",len(rows)	
+	#print "NUMBER OF ROWS ",len(rows)	
 	if len(rows) > 1:
 		ret = map(lambda x:x[1], rows)
-		print "Reading from database"
+		#print "Reading from database"
 	else:
 		price_dict = get_price_history(stocksymbol, startyear, endyear)
 		
 		t = (stocksymbol,)
 		c.execute('select stock_id from system_stocks where symbol=?',t)
 		stock_id = c.fetchone()[0]
-		print stock_id, stocksymbol	
+		#print stock_id, stocksymbol	
 		
 		prices = []
 		years = []
@@ -110,18 +111,20 @@ def returns(stocksymbol, startyear, endyear):
 		#prices = [ prices[i] for i in range(0,len(prices),12)]
 		#years = map(lambda x:int(x.split('-')[0]), price_dict["Date"]) 
 		#years = [ years[y] for y in range(0, len(years),12)]
-		print years
+		#print years
 		ret = [(prices[i+1] - prices[i]) for i in range(len(prices)-1)]
-		print ret
+		#print ret
 		for y in range(len(years)):
 			t = (stock_id, years[y], ret[y])	
 			c.execute('insert into stock_returns values(?,?,?)',t)
 		conn.commit()	
-		print prices
-	if len(ret) < (endyear - startyear + 1):
+		#print prices
+
+	# if the stock went public after the startyear, put 0.0 return for those years
+	if len(ret) < (endyear - startyear + 1): 
 		for i in range(endyear -startyear + 1 - len(ret) ):
 			ret.insert(0, 0.0)
-	print ret
+	#print ret
 	return ret
 
 def markwtz_opt(avg_ret,dim,cov_mat,exp_ret):
@@ -145,11 +148,11 @@ def optimize_portfolio(stock_symbols, investment, exp_ret, startyear, endyear):
 	price_mat = []
 	avg_ret = []
 	for stock in stock_symbols:
-		print "Name of stock =" +stock
+		#print "Name of stock =" +stock
 		ret = returns(stock, startyear, endyear) 
 		avg_ret.append(np.mean(ret))	
 		price_mat.append(np.array(ret))	
-        print "avg_ret=",avg_ret, "len=", len(avg_ret)
+        #print "avg_ret=",avg_ret, "len=", len(avg_ret)
         #print "price_mat=",price_mat, "len=", len(price_mat)
 	price_mat = np.array(price_mat)
 	cov_mat = matrix(np.array(np.cov(price_mat)))
@@ -158,10 +161,10 @@ def optimize_portfolio(stock_symbols, investment, exp_ret, startyear, endyear):
 	allocation = []
 	if sol['status'] == 'optimal':
 		#print 'Optimal solution found'
-		print sol['x']
+		#print sol['x']
 		allocation = [round(t,2) for t in sol['x'] * investment]
-		print stock_symbols
-		print allocation
+		#print stock_symbols
+		#print allocation
 		
 	else:
 		print 'Optimal solution not found'
@@ -169,6 +172,38 @@ def optimize_portfolio(stock_symbols, investment, exp_ret, startyear, endyear):
 	#get avg return
 	#get covariance matrix
 	#do quadratic programming
+	return allocation
+
+def optimize_portfolio_parallel(stock_symbols, investment, exp_ret, startyear, endyear):
+	
+	if cached and os.path.isdir("./cache") == False:
+		os.mkdir("./cache")
+	num_buckets = len(stock_symbols) / OPT_BUCKET_SIZE
+	if len(stock_symbols) % OPT_BUCKET_SIZE != 0:
+		num_buckets += 1
+	allocation = []
+	alloc_table = {}
+
+	pool = ThreadPool(num_buckets) #num_threaads
+	for i in range(num_buckets):
+		stocks_bucket = []
+		invest_bucket = 0
+		if i == num_buckets - 1:
+			stocks_bucket = stock_symbols[i*OPT_BUCKET_SIZE:]
+			invest_bucket = (len(stock_symbols) - i*OPT_BUCKET_SIZE)*1.0*investment/len(stock_symbols)
+		else:
+			stocks_bucket = stock_symbols[i*OPT_BUCKET_SIZE: (i+1)*OPT_BUCKET_SIZE]
+			invest_bucket = OPT_BUCKET_SIZE*1.0*investment/len(stock_symbols)
+		alloc_table[i] = pool.apply_async(optimize_portfolio, (stocks_bucket, invest_bucket, exp_ret, startyear, endyear)).get()
+		#allocation.extend(optimize_portfolio(stocks_bucket, invest_bucket, exp_ret, startyear, endyear))		
+		#allocation = pool.map(optimize_portfolio, (stocks_bucket, invest_bucket, exp_ret, startyear, endyear))
+	pool.close()
+	pool.join()
+
+	for k in alloc_table.keys():
+		allocation.extend(alloc_table[k])	
+		print "Key =",k," allocation size = ",len(allocation)
+
 	return allocation
 
 if __name__ == "__main__":

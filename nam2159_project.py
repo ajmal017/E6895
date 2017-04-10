@@ -6,7 +6,7 @@ import portfolio
 app = Flask(__name__)
 
 port = os.getenv('PORT', '5000')
-startyear = 2014
+startyear = 2012
 endyear = 2016
 @app.route('/', methods=['POST', 'GET'])
 def porfolio():
@@ -26,19 +26,20 @@ def porfolio():
 			c = conn.cursor() 
 
 			for r in c.execute('''select cat_name, symbol, company_name from stock_categories A, system_stocks B where A.cat_id = B.cat_id'''):
-				print r[1]
+				#print r[1]
 				#res['symbol'].append(r[1]+" : "+r[2])	
 				res['symbol'].append(r[1])
 				res['company'].append(r[2])
-			print res['symbol']
+			#print res['symbol']
 			#if request.method == 'POST':	
-			res["allocation"] = portfolio.optimize_portfolio(res['symbol'], float(request.form['investment']), float(request.form['expectedreturn']), startyear, endyear)		
-				
+			#res["allocation"] = portfolio.optimize_portfolio(res['symbol'], float(request.form['investment']), float(request.form['expectedreturn']), startyear, endyear)		
+			res["allocation"] = portfolio.optimize_portfolio_parallel(res['symbol'], float(request.form['investment']), float(request.form['expectedreturn']), startyear, endyear)		
+			res["investment"] = request.form['investment']
+			res['expectedreturn'] = request.form['expectedreturn']		
+		
 			conn.close()
 
 	return render_template('optimize.html', result=res)
-
-
 
 if __name__ == "__main__":
         app.run(host='0.0.0.0', port=int(port))

@@ -14,9 +14,17 @@
           <H1>Portfolio Optimization</H1>
           <form>
              Investment Amount:<br>
+	    {% if result['investment'] is defined %}
+             <input type="text" name="investment" value={{ result['investment'] }} ><br>
+	    {% else %}	
              <input type="text" name="investment"><br>
+	    {% endif %}
              Expected Return:<br>
+             {% if result['expectedreturn'] is defined %}	     
+             <input type="text" name="expectedreturn" value={{ result['expectedreturn'] }}><br>
+	     {% else %} 
              <input type="text" name="expectedreturn"><br> 
+             {% endif %}
              <input type="submit" name="submit" value="Optimize" formmethod="post">
           </form> 
       </div>
