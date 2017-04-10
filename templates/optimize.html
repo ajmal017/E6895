@@ -34,19 +34,22 @@
        Error Message: {{ result['error']  }}
       {% endif %}
 
-      {% if result['allocation'] is defined %}
+      {% if result['portfolio'] is defined %}
+        {% for k in result['portfolio'].keys() %} 
          <div align=center>
 	     <table>
 	     <tr>	
-	        <td> <H2>List of stocks considered and allocation:</H2> </td> 
+	        <td> <H2>List of stocks considered in {{ k }}</H2> </td> 
 	     </tr>
-	     {% for i in range(result['symbol']|length)  %}
+	     {% for i in range(result['portfolio'][k]['symbol']|length)  %}
 	     <tr>
-	        <td align=left> {{ result['symbol'][i] }} : {{ result['company'][i] }} -- ${{ result['allocation'][i] }}  </td>
+	        <td align=left> {{ result['portfolio'][k]['symbol'][i] }} : {{ result['portfolio'][k]['company'][i] }} -- ${{ result['portfolio'][k]['allocation'][i] }}  </td>
 	     </tr>        
 	     {% endfor %}
 	     </table>
          </div>
+	 <br>	
+        {% endfor %}
       {% endif %}
   
   </body>

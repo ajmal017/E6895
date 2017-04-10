@@ -206,6 +206,42 @@ def optimize_portfolio_parallel(stock_symbols, investment, exp_ret, startyear, e
 
 	return allocation
 
+def optimize_portfolio_by_categories(stock_symbols, investment, exp_ret, startyear, endyear):
+	
+	if cached and os.path.isdir("./cache") == False:
+		os.mkdir("./cache")
+		
+	stocks_by_categories = {}
+	conn = sqlite3.connect('data/portfolio.db')
+	c = conn.cursor()
+	for row in c.execute('select distinct symbol, cat_name from system_stocks A, stock_categories B where A.cat_id = B.cat_id'):
+		if row[1] not in stocks_by_categories:
+			stocks_by_categories[row[1]] = []
+		stocks_by_categories[row[1]].append(row[0]) 
+	
+	conn.close()
+	print stocks_by_categories	
+
+	allocation = []
+	alloc_table = {}
+
+	num_threads = len(stocks_by_categories.keys())
+	pool = ThreadPool(num_threads)
+	for k in stocks_by_categories.keys():
+		stocks_bucket = stocks_by_categories[k]
+		invest_bucket = len(stocks_bucket)*1.0*investment/len(stock_symbols)
+		alloc_table[k] = pool.apply_async(optimize_portfolio, (stocks_bucket, invest_bucket, exp_ret, startyear, endyear)).get()
+		#allocation.extend(optimize_portfolio(stocks_bucket, invest_bucket, exp_ret, startyear, endyear))		
+		#allocation = pool.map(optimize_portfolio, (stocks_bucket, invest_bucket, exp_ret, startyear, endyear))
+	pool.close()
+	pool.join()
+
+	for k in alloc_table.keys():
+		allocation.extend(alloc_table[k])	
+		print "Key =",k," allocation size = ",len(allocation)
+
+	return allocation
+
 if __name__ == "__main__":
 	
 	#Test code
