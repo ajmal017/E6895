@@ -1,13 +1,12 @@
 
 As a starter, populate some info inside the portfolio db, run:
 python create_portfolio_data.py
-It will consider all stocks that has a PE Growth Ratio > 2 (from file data/PEG_ratio.txt) and populate into db 20 stocks with the smallest PEG ratio. 
+It will consider all stocks that has a PE Growth Ratio > 0.5 (from file data/PEG_ratio.txt) and populate into db 20 stocks with the smallest PEG ratio. 
 
 
 Next, to start the web service run:
 python nam2169_project.py
 Point your browser to http://<ip address>:5000
-
 
 To collect the list of NASDAQ stocks with their associated PE and PEG ratio run:
 python getstocklist.py

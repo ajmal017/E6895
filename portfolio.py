@@ -223,7 +223,7 @@ def optimize_portfolio_by_categories(stock_symbols, investment, exp_ret, startye
 	print stocks_by_categories	
 
 	allocation = [] #final result
-
+	#total_alloc = 0.0
 	num_threads = len(stocks_by_categories.keys())
 	pool = ThreadPool(num_threads)
 	alloc_list = []	
@@ -245,10 +245,10 @@ def optimize_portfolio_by_categories(stock_symbols, investment, exp_ret, startye
 					invest_bucket = OPT_BUCKET_SIZE*1.0*invest_in_cat/len(stocks_in_cat)
 				print stocks_bucket, invest_bucket
 				alloc_list.append(pool.apply_async(optimize_portfolio, (stocks_bucket, invest_bucket, exp_ret, startyear, endyear)).get())
+				#total_alloc += invest_bucket
 		else:
 			alloc_list.append(pool.apply_async(optimize_portfolio, (stocks_in_cat, invest_in_cat, exp_ret, startyear, endyear)).get())
-		#allocation.extend(optimize_portfolio(stocks_bucket, invest_bucket, exp_ret, startyear, endyear))		
-		#allocation = pool.map(optimize_portfolio, (stocks_bucket, invest_bucket, exp_ret, startyear, endyear))
+			#total_alloc += invest_in_cat
 	pool.close()
 	pool.join()
 
@@ -256,6 +256,7 @@ def optimize_portfolio_by_categories(stock_symbols, investment, exp_ret, startye
 		allocation.extend(l)	
 		print "Key =",k," allocation size = ",len(allocation)
 
+	#print "***********TOTAL ALLOC*********** = ", total_alloc 
 	return allocation
 
 if __name__ == "__main__":
