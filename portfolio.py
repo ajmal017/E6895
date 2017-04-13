@@ -11,7 +11,7 @@ from cvxopt import matrix, solvers
 from multiprocessing.pool import ThreadPool
 
 cached = True
-OPT_BUCKET_SIZE = 300
+OPT_BUCKET_SIZE = 250
 
 def get_price_history(stocksymbol, startyear, endyear):
 	price_data = defaultdict(list)
@@ -222,22 +222,38 @@ def optimize_portfolio_by_categories(stock_symbols, investment, exp_ret, startye
 	conn.close()
 	print stocks_by_categories	
 
-	allocation = []
-	alloc_table = {}
+	allocation = [] #final result
 
 	num_threads = len(stocks_by_categories.keys())
 	pool = ThreadPool(num_threads)
+	alloc_list = []	
 	for k in stocks_by_categories.keys():
-		stocks_bucket = stocks_by_categories[k]
-		invest_bucket = len(stocks_bucket)*1.0*investment/len(stock_symbols)
-		alloc_table[k] = pool.apply_async(optimize_portfolio, (stocks_bucket, invest_bucket, exp_ret, startyear, endyear)).get()
+		stocks_in_cat = stocks_by_categories[k]
+		invest_in_cat = len(stocks_in_cat)*1.0*investment/len(stock_symbols)
+		if len(stocks_in_cat) > OPT_BUCKET_SIZE:
+			num_buckets = len(stocks_in_cat) / OPT_BUCKET_SIZE
+			if len(stocks_in_cat) % OPT_BUCKET_SIZE != 0:
+				num_buckets += 1
+			stocks_bucket = []
+			invest_bucket = 0
+			for i in range(num_buckets):
+				if i == num_buckets - 1:
+					stocks_bucket = stocks_in_cat[i*OPT_BUCKET_SIZE:]
+					invest_bucket = (len(stocks_in_cat) - i*OPT_BUCKET_SIZE)*1.0*invest_in_cat/len(stocks_in_cat)
+				else:
+					stocks_bucket = stocks_in_cat[i*OPT_BUCKET_SIZE: (i+1)*OPT_BUCKET_SIZE]
+					invest_bucket = OPT_BUCKET_SIZE*1.0*invest_in_cat/len(stocks_in_cat)
+				print stocks_bucket, invest_bucket
+				alloc_list.append(pool.apply_async(optimize_portfolio, (stocks_bucket, invest_bucket, exp_ret, startyear, endyear)).get())
+		else:
+			alloc_list.append(pool.apply_async(optimize_portfolio, (stocks_in_cat, invest_in_cat, exp_ret, startyear, endyear)).get())
 		#allocation.extend(optimize_portfolio(stocks_bucket, invest_bucket, exp_ret, startyear, endyear))		
 		#allocation = pool.map(optimize_portfolio, (stocks_bucket, invest_bucket, exp_ret, startyear, endyear))
 	pool.close()
 	pool.join()
 
-	for k in alloc_table.keys():
-		allocation.extend(alloc_table[k])	
+	for l in alloc_list:
+		allocation.extend(l)	
 		print "Key =",k," allocation size = ",len(allocation)
 
 	return allocation
