@@ -1,7 +1,7 @@
 
 As a starter, populate some info inside the portfolio db, run:
 python create_portfolio_data.py
-It will consider all stocks that has a PE Growth Ratio > 0.5 (from file data/PEG_ratio.txt) and populate into db 20 stocks with the smallest PEG ratio. 
+It will consider all stocks that has a PE Growth Ratio > 0 (from file data/PEG_ratio.txt) and populate into db 1000 stocks with the smallest PEG ratio. 
 
 
 Next, to start the web service run:
