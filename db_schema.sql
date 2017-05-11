@@ -43,6 +43,14 @@ CREATE TABLE stock_returns(
   FOREIGN KEY(stock_id) REFERENCES system_stocks(stock_id)
 );
 
+DROP TABLE IF EXISTS predicted_returns;
+
+CREATE TABLE predicted_returns(
+  stock_id INTEGER,
+  year INTEGER, 
+  yearly_return REAL,
+  FOREIGN KEY(stock_id) REFERENCES system_stocks(stock_id)
+);
 
 DROP TABLE IF EXISTS allocation;
 

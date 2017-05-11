@@ -25,6 +25,12 @@
 	     {% else %} 
              <input type="text" name="expectedreturn"><br> 
              {% endif %}
+             How many years from now:<br>
+             {% if result['expectedreturn'] is defined %}	     
+             <input type="text" name="years" value={{ result['years'] }}><br>
+	     {% else %} 
+             <input type="text" name="years" value=1 ><br> 
+             {% endif %}
              <input type="submit" name="submit" value="Optimize" formmethod="post">
           </form> 
       </div>
