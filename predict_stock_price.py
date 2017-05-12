@@ -153,5 +153,5 @@ if __name__ == "__main__":
 	startyear=2012
 	endyear=2016
 
-	predict_and_store_all_stock_returns(startyear, endyear, 10)
+	predict_and_store_all_stock_returns(startyear, endyear, 30)
 	#predict_and_store_returns('AMZN', startyear, endyear, 30)

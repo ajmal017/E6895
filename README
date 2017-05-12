@@ -1,7 +1,7 @@
 
 As a starter, populate some info inside the portfolio db, run:
 python create_portfolio_data.py
-It will consider all stocks that has a PE Growth Ratio > 0 (from file data/PEG_ratio.txt) and populate into db 1000 stocks with the smallest PEG ratio. 
+It will consider all stocks that has a PE Growth Ratio > 0.5 (from file data/PEG_ratio.txt) and populate into db 1000 stocks with the smallest PEG ratio. 
 
 
 Next, to start the web service run:
@@ -12,4 +12,14 @@ To collect the list of NASDAQ stocks with their associated PE and PEG ratio run:
 python getstocklist.py
 This will write/update the files data/PE_ratio.txt and data/PE_growth_ratio.txt
 
+
+
+Other instructions:
+
+To run for different start and end years, edit the nam2169_project.py file. Inside the file change the startyear and endyear variables. The current values are set for 2012 and 2016 respectively.
+
+For the very first time, the portfolio request is made by the user via the web interface, there would be no stock price data in the cache directory or inside the database. Therefore, the prices are fetched using the yahoo financed API and stored in the cached file. Also, the yearly returns are inserted into the database for further use. Hence, the performance will be slow the first time it is run. For the subsequent runs it will be faster due to the usage of cached/stored information.
+However, it is recommended that the input "How many years from now" is set to 1 for the first portfolio request. If the value is more then the backend will produce predicted stock prices and make the performance even slower. To avoid that the script predict_stock_price.py can be run independently after the first request. This script fetches historical prices from the cached files, predict the future prices for each stock (current just using linear regression), and then inserts them into the database for subsequent use.
+
+One can also use an API (if available) for the predicted stock prices. Inside the predict_stock_price.py script there is a function template 'obtain_and_store_future_returns' which can be implemented to achieve that. The current prediction function (that uses linear regression ) 'predict_and_store_returns' is invoked from the 'returns' function inside portfolio.py script. The implemented prediction function should replace that. 
 
